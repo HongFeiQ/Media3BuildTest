@@ -14,7 +14,7 @@ on:
       MEDIA3_BRANCH:
         description: "MEDIA3_BRANCH"
         required: true
-        default: 'release-1.8.0-beta01'
+        default: 'release-1.6.1'
       FFMPEG_VERSION:
         description: "FFMPEG_VERSION"
         required: true
@@ -49,7 +49,7 @@ jobs:
       - uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
-          ndk-version: r28b
+          ndk-version: r28
           local-cache: false
           add-to-path: true
 
