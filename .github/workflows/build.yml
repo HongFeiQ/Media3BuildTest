@@ -1,0 +1,75 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      MEDIA3_GIT:
+        description: "MEDIA3_GIT"
+        required: true
+        default: 'androidx'
+      MEDIA3_BRANCH:
+        description: "MEDIA3_BRANCH"
+        required: true
+        default: 'release-1.8.0-beta01'
+      FFMPEG_VERSION:
+        description: "FFMPEG_VERSION"
+        required: true
+        default: '6.1'
+            
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Checkout Media3
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git clone https://github.com/${{ github.event.inputs.MEDIA3_GIT }}/media -b ${{ github.event.inputs.MEDIA3_BRANCH }}
+          
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+   
+      # Set up NDK
+      - uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r28b
+          local-cache: false
+          add-to-path: true
+
+      # Build 
+      - name: Build
+        continue-on-error: false
+        env:
+          ANDROID_NDK_HOME: ${{steps.setup-ndk.outputs.ndk-path }}
+          NDK_PATH: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ROOT_DIR:  ${{ github.workspace }}
+          FFMPEG_VER: ${{ github.event.inputs.FFMPEG_VERSION }}
+        run: |
+         echo "build libs"
+         source ${{ github.workspace }}/.github/scripts/build.sh
+         echo "Build Success"
+
+      # Runs a set of commands using the runners shell
+      - name: Upload library
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: aar-library
+          path: repo
